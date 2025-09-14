@@ -1,0 +1,95 @@
+package GuessNumberGame;
+
+import java.util.Random;
+import java.util.Scanner;
+
+public class GuessNumberGame {
+
+    static Random random = new Random();
+    static int count = 0;
+    static boolean isRun = true;
+    static int secretNumber = random.nextInt(100) + 1;
+
+    public static void main(String[] args) {
+
+        Scanner scanner = new Scanner(System.in);
+
+        int bestScore = Integer.MAX_VALUE; //Лучшая попытка
+        boolean playAgain = true; //Проверка для продолжения игры
+
+        // В потоке компьютер угадывает число при помощи random
+        Thread gameAI = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (isRun){
+                    count++;
+                    int numberAI = random.nextInt(1, 100 + 1);
+
+                    if (numberAI == secretNumber){
+                        isRun = false;
+                    }
+                }
+            }
+        });
+
+        gameAI.start();
+
+        System.out.println("Компьютер загадал число от 1 до 100. Попробуй угадать!");
+        // Пока true, идет игра
+        while (playAgain){
+
+            int attempts = 0; // Количество попыток
+            boolean guessed = false; // Проверка угадывания
+
+            while (!guessed){
+
+                String input = scanner.nextLine().trim(); // Считываем ответ, убираем пробелы по краям
+
+                // Обработка комманды RESULT
+                if (input.equalsIgnoreCase("RESULT")){
+                    System.out.printf("Количество попыток: %d %n", attempts);
+
+                    if (bestScore == Integer.MAX_VALUE){
+                        System.out.println("Лучшая игра: еще не завершена. ");
+                    }else {
+                        System.out.printf("Лучшая игра: %d попыток.%n", bestScore);
+                    }
+                    continue;
+                }
+
+                try {
+                    int guess = Integer.parseInt(input); // Преобразование строки в число
+                    attempts++; // добавление попыток
+
+                    // Проверка угадывания
+                    if ( guess == secretNumber){
+                        guessed = true;
+                        System.out.printf("Количество попыток: %d. %nЗагаданное число: %d.%nКомпьютер угадал за %d попыток.%n", attempts, secretNumber, count);
+
+                        //Обновление результата
+                        if (attempts < bestScore){
+                            bestScore = attempts;
+                        }
+
+                      // Подсказки игроку
+                    } else if (guess < secretNumber) {
+                        System.out.println("Я сам в шоке, но, загаданное число больше, брат");
+                    }else {
+                        System.out.println("Не ожидал от тебя такого. Загаданное число меньше, брат");
+                    }
+                }
+                // Обработка ошибок (если введено не число)
+                catch (NumberFormatException e) {
+                    System.out.println("Пожалуйста, введите число или команду RESULT");
+                }
+            }
+            // Предложение сыграть еще
+            System.out.println("Хочешь сыграть еще? (да/нет)");
+            String response = scanner.nextLine().trim();
+            playAgain = response.equalsIgnoreCase("да"); // Обновляем продолжения игры
+        }
+        // Завершение программы
+        scanner.close();// Закрываем Scanner (хорошая практика)
+        System.out.println("Спасибо за игру! До свидания!");
+    }
+}
